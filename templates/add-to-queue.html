@@ -7,19 +7,28 @@
         <style>
          
         </style>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head>
     <body>
-        <div class="container">
+        <div class="container" id="app">
             <div class="columns">
                 <div class="column col-md-12 col-8 col-mx-auto">
-                    <h1>Loader <small class="label">v0.8</small></h1>
-                    <h2>Add a file</h2>
-         <form class="pure-form pure-form-stacked" action="/log" method="post" autocomplete="off">
+                    <h1>Loadr <small class="label">v0.9</small></h1>
+                    <ul class="tab tab-block">
+                        <li class="tab-item" v-bind:class="{active: view == 'add' }" @click="view = 'add'">
+                            <a href="#">Add Files</a>
+                        </li>
+                        <li class="tab-item" v-bind:class="{active: view == 'batches' }" @click="switchToBatches">
+                            <a href="#">Batches</a>
+                        </li>
+                    </ul>
+         <form class="pure-form pure-form-stacked" autocomplete="off" v-show="view == 'add'">
             <fieldset>
                 <div class="form-group">
                     <label class="form-label" for="url">address</label>
-                    <input class="form-input" id="url" type="text" name="url" value="">
+                    <input class="form-input" id="url" type="text" name="url" value="" v-model="newUrl.url">
                     <span class="pure-form-message">supports youtube-dl plattforms eg. youtube, soundcloud, vimeo</span>
                 </div>
                 <div class="form-group">
@@ -32,14 +41,100 @@
                     <span class="pure-form-message">in which folder to save the downloaded files</span>
 
                 </div>
-                
-                <button type="submit" class="btn btn-primary">Add to queue</button>
- 
+                <a class="btn btn-primary btn-add-to-queue" @click.stop="addToQueue">Add to queue</a>
             </fieldset>
        </form>
-       <a class="btn" href="/load">load all</a>
+       <div class="batch-status" v-show="view == 'batches'">
+           <div clas="batch" v-for="batch in batches">
+               <h3>[[ batch.name ]] </h3>
+               <a @click="load(batch.name)">load</a>
+               lines: [[ batch.count ]]/[[batch.maxCount]]
+               <span v-html="batch.count"></span>
+               <div class="bar bar-sm">
+                   <div class="bar-item" role="progressbar" v-bind:style="{width: batch.count / batch.maxCount * 100 + '%'}"
+                        aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+               </div>
+
+               <button @click="lower">lower</button>
+               <button @click="batch.count = batch.count - 1">lower2</button>
+           </div>
+       </div>
+                       </div>
+            </div>
+            <div class="log">
+                <div class="toast toast-success" v-for="message in messages">
+                    [[ message.text ]]
                 </div>
             </div>
         </div>
-            </body>
+        <script>
+         var app = new Vue({
+             el: '#app',
+             data: {
+                 newUrl: {
+                     url: '',
+                     type: ''
+                 },
+                 messages: [],
+                 view: 'add',
+                 batches: []
+             },
+             delimiters: ['[[',']]'],
+             methods:{
+                 load: function(batch){
+                     $.getJSON('/load/'+batch, {
+                     }, function(data) {
+
+                     });
+                 },
+                 lower: function(){
+                    //app.batches[0].$set('count', 0);
+                     obj= app.batches[0];
+                     obj.count--;
+                     Vue.set(app.batches, 0, obj)
+                 },
+                 switchToBatches: function(){
+                     app.view = 'batches';
+                     for (i = 0; i < app.batches.length; i++){
+                         app.$delete(app.batches, 0);
+                     }
+                     $.getJSON('/api/batches', {
+                     }, function(data) {
+                         for (i = 0; i < data.batches.length; i++) {
+                             let name = data.batches[i];
+                             console.log("batch:" + name);
+                            $.getJSON('/api/batch/'+name, {
+                            }, function(dataCount) {
+                                app.$set(app.batches, app.batches.length, {"name": name, "count": dataCount.lineCount, "maxCount": dataCount.lineCount});
+                                j=app.batches.length-1;
+                                app.batches[j].name = name;
+                                app.batches[j].count = dataCount.lineCount;
+                                app.batches[j].maxCount = dataCount.lineCount;
+                                console.log(app.batches);
+                            });
+                         }
+                     });
+                 },
+                 addToQueue: function(){
+                     var btn=$('.btn-add-to-queue');
+                     var url=$('input[name="url"]').val();
+                     if(app.newUrl.url == ''){
+                         return;
+                     }
+                     btn.addClass("disabled");
+                     $.post('/log', {
+                         url: app.newUrl.url,
+                         type: $('select[name="type"]').val()
+                     }, function(data) {
+                         console.log(data.result);
+                         btn.removeClass("disabled");
+                         app.messages.push({text: "added "+ app.newUrl.url})
+                        app.newUrl.url = '';
+                     });
+
+                 }
+             }
+         })
+        </Script>
+    </body>
 </html>
