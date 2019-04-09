@@ -1,0 +1,45 @@
+<html>
+    <head>
+        <title>capturing sources</title>
+        <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+        <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-exp.min.css">
+        <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+        <style>
+         
+        </style>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div class="container">
+            <div class="columns">
+                <div class="column col-md-12 col-8 col-mx-auto">
+                    <h1>Loader <small class="label">v0.8</small></h1>
+                    <h2>Add a file</h2>
+         <form class="pure-form pure-form-stacked" action="/log" method="post" autocomplete="off">
+            <fieldset>
+                <div class="form-group">
+                    <label class="form-label" for="url">address</label>
+                    <input class="form-input" id="url" type="text" name="url" value="">
+                    <span class="pure-form-message">supports youtube-dl plattforms eg. youtube, soundcloud, vimeo</span>
+                </div>
+                <div class="form-group">
+                    <label for="type">Type</label>
+                    <select class="form-select" name="type">
+                        <option value="music">music</option>
+                        <option value="video">video</option>
+                        <option value="hidden">other</option>
+                    </select>
+                    <span class="pure-form-message">in which folder to save the downloaded files</span>
+
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Add to queue</button>
+ 
+            </fieldset>
+       </form>
+       <a class="btn" href="/load">load all</a>
+                </div>
+            </div>
+        </div>
+            </body>
+</html>
